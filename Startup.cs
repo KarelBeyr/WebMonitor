@@ -39,29 +39,31 @@ namespace WebMonitor
             {
                 endpoints.MapGet("", async context =>
                 {
-                    var body = new StreamReader(context.Request.Body);
-                    var requestBody = await body.ReadToEndAsync();
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Log from {DataModel.Started}");
+                    sb.AppendLine($"<p style=\"float:left\" >Log from {DataModel.Started} </p><form style=\"float:left\" action=\"/reset\" method=\"post\"><input type=\"submit\" value=\"reset\"></form>");
+                    sb.AppendLine($"<form action=\"/foo{DateTime.Now.Ticks}\" method=\"post\"><input type=\"hidden\" name=\"val\" value=\"xxx\"><input type=\"submit\" value=\"foo\"></form>");
+
                     foreach (var kv in DataModel.Dict)
                     {
-                        sb.AppendLine($"{kv.Key}: {kv.Value}");
+                        sb.AppendLine($"{kv.Key}: {kv.Value} <br>");
                     }
+                    context.Response.ContentType = "text/html";
                     await context.Response.WriteAsync(sb.ToString());
                 });
                 endpoints.MapPost("/reset", async context =>
                 {
                     DataModel.Dict.Clear();
                     DataModel.Started = DateTime.Now;
-                    await context.Response.WriteAsync($"reset");
+                    context.Response.Redirect("/");
                 });
-                endpoints.MapPost("/{name:alpha}", async context =>
+                endpoints.MapPost("/{name:required}", async context =>
                 {
                     var body = new StreamReader(context.Request.Body);
                     var requestBody = await body.ReadToEndAsync();
                     var fn = context.Request.Path.ToString().Substring(1);
                     DataModel.Dict[fn] = requestBody;
-                    await context.Response.WriteAsync($"message received");
+                    //await context.Response.WriteAsync($"message received");
+                    context.Response.Redirect("/");
                 });
             });
         }
